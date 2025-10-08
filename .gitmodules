@@ -1,0 +1,3 @@
+[submodule "Vendor/Sharpmake"]
+	path = Vendor/Sharpmake
+	url = https://github.com/zzWeeZz/Sharpmake.git
