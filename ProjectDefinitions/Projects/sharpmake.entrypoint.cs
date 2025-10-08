@@ -30,7 +30,8 @@ public class EntryPoint : Project
             conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
 
         conf.Output = Configuration.OutputType.Exe;
+        conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 
-        conf.AddPrivateDependency<Core>(target);
+        conf.AddPrivateDependency<Zmalloc>(target);
     }
 }

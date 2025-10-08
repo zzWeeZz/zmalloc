@@ -1,9 +1,9 @@
 using Sharpmake;
 
 [Sharpmake.Generate]
-public class Core : Project
+public class Zmalloc : Project
 {
-    public Core()
+    public Zmalloc()
     {
         RootPath = @"[project.SharpmakeCsPath]\..\..\[project.Name]";
         SourceRootPath = @"[project.RootPath]\src";
@@ -28,6 +28,20 @@ public class Core : Project
             conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDebugDLL);
         else
             conf.Options.Add(Options.Vc.Compiler.RuntimeLibrary.MultiThreadedDLL);
+
+        conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+
+
+        if (target.Platform != Platform.win64)
+        {
+            // Exclude Windows-specific source files
+            conf.SourceFilesBuildExclude.Add(@"[project.SourceRootPath]/platform_windows.cpp");
+        }
+        else
+        {
+            // Exclude non-Windows files
+            conf.SourceFilesBuildExclude.Add(@"[project.SourceRootPath]/platform_linux.cpp");
+        }
 
         conf.Output = Configuration.OutputType.Lib;
     }

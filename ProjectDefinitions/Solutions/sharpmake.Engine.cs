@@ -4,7 +4,7 @@ using System;
 [Sharpmake.Generate]
 public class EngineSolution : Sharpmake.Solution
 {
-    public String WorkingDirectory = @"[solution.SharpmakeCsPath]\..";
+    public String WorkingDirectory = @"[solution.SharpmakeCsPath]\..\..";
     public EngineSolution()
     {
         Name = "Engine";
@@ -17,6 +17,6 @@ public class EngineSolution : Sharpmake.Solution
         conf.SolutionFileName = "[solution.Name]";
         conf.SolutionPath = WorkingDirectory;
         conf.AddProject<EntryPoint>(target);
-        conf.AddProject<Core>(target);
+        conf.AddProject<Zmalloc>(target);
     }
 }
