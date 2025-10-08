@@ -14,3 +14,11 @@ void* zrealloc(void* ptr, size_t size);
 // Allocates an array of num elements, each of size bytes, and initializes all bytes to zero.
 // Returns a pointer to the allocated memory, or nullptr if the allocation fails or if num or size is zero.
 void* zcalloc(size_t num, size_t size);
+
+
+// For debugging purposes: prints the current state of the memory heaps.
+void PrintHeapState();
+// For debugging purposes: validates the integrity of the memory heaps.
+bool ValidateHeapIntegrity();
+
+void CheckForMemoryLeaks();

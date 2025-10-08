@@ -3,6 +3,17 @@
 #include <print>
 #include <zmalloc/zmalloc.h>
 
+void* operator new(size_t size)
+{
+    void* ptr = zmalloc(size);
+    if (!ptr) throw std::bad_alloc();
+    return ptr;
+}
+void operator delete(void* ptr) noexcept
+{
+    zfree(ptr);
+}
+
 void Test_zrealloc_basic()
 {
     // Allocate and fill memory
@@ -69,8 +80,17 @@ void Test_zcalloc_zero()
 
 int main()
 {
-    Test_zrealloc_basic();
-    Test_zcalloc_basic();
-    Test_zrealloc_nullptr();
-    Test_zcalloc_zero();
+    {
+        Test_zrealloc_basic();
+        Test_zcalloc_basic();
+        Test_zrealloc_nullptr();
+        Test_zcalloc_zero();
+
+
+        std::string aa;
+        aa = "adfklasdfkla d adkf asdlkf asd flasdf lasdlf adls ";
+
+    }
+    CheckForMemoryLeaks();
+	return 0;
 }

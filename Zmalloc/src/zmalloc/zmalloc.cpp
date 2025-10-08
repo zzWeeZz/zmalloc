@@ -29,6 +29,7 @@ struct BlockMetadata
 
 static HeapMetadata* s_tinyHeap = nullptr;
 static HeapMetadata* s_smallHeap = nullptr;
+static HeapMetadata* s_largeHeap = nullptr;
 
 template<typename T>
 static inline void* Shift(void* start)
@@ -106,25 +107,29 @@ static void* zmalloc_internal(size_t size, HeapMetadata*& heap_to_alloc_to, size
 		currentHeap = AllocateNewPageAndInitalizeMetadata(page_allocation_size, lastHeap);
 	}
 
-	if(heap_to_alloc_to)
+	if(!heap_to_alloc_to)
 	{
 		heap_to_alloc_to = currentHeap;
 	}
 
 	BlockMetadata* block = (BlockMetadata*)Shift<HeapMetadata>(currentHeap);
+	BlockMetadata* lastBlock = nullptr;
 	while (block != nullptr)
 	{
 		if (!block->isUsed)
 		{
 			// found a free block
 			block->isUsed = true;
+			block->size = size;
 			currentHeap->freeSize -= block->size;
 			currentHeap->block_count += 1;
 			block->parentHeap = currentHeap;
-			block->size = size;
 			return Shift<BlockMetadata>(block);
 		}
+		lastBlock = block;
+		block->next = reinterpret_cast<BlockMetadata*>(reinterpret_cast<char*>(block) + sizeof(BlockMetadata) + block_size);
 		block = block->next;
+		block->previous = lastBlock;
 	}
 
 	_ASSERT(false && "Error no free blocks found PANIC");
@@ -140,7 +145,7 @@ void* zmalloc(size_t size)
 	}
 	else if (size < SmallBlockSize())
 	{
-		return zmalloc_internal(size, s_smallHeap, TinyHeapAllocationSize(), SmallBlockSize());
+		return zmalloc_internal(size, s_smallHeap, SmallHeapAllocationSize(), SmallBlockSize());
 	}
 
 	_ASSERT(false && "Error large allocations not supported yet");
@@ -215,4 +220,75 @@ void* zcalloc(size_t num, size_t size)
 	void* ptr = zmalloc(total_size);
 	memset(ptr, 0, total_size);
 	return ptr;
+}
+
+void PrintHeapState()
+{
+	std::cout << "Tiny Heaps:\n";
+	HeapMetadata* currentHeap = s_tinyHeap;
+	while (currentHeap)
+	{
+		std::cout << "  Heap at " << currentHeap << ": totalSize=" << currentHeap->totalSize
+			<< ", freeSize=" << currentHeap->freeSize << ", block_count=" << currentHeap->block_count << "\n";
+		BlockMetadata* block = (BlockMetadata*)Shift<HeapMetadata>(currentHeap);
+		while (block)
+		{
+			std::cout << "    Block at " << block << ": size=" << block->size
+				<< ", isUsed=" << (block->isUsed ? "true" : "false") << "\n";
+			block = block->next;
+		}
+		currentHeap = currentHeap->next;
+	}
+	std::cout << "Small Heaps:\n";
+	currentHeap = s_smallHeap;
+	while (currentHeap)
+	{
+		std::cout << "  Heap at " << currentHeap << ": totalSize=" << currentHeap->totalSize
+			<< ", freeSize=" << currentHeap->freeSize << ", block_count=" << currentHeap->block_count << "\n";
+		BlockMetadata* block = (BlockMetadata*)Shift<HeapMetadata>(currentHeap);
+		while (block)
+		{
+			std::cout << "    Block at " << block << ": size=" << block->size
+				<< ", isUsed=" << (block->isUsed ? "true" : "false") << "\n";
+			block = block->next;
+		}
+		currentHeap = currentHeap->next;
+	}
+}
+
+bool ValidateHeapIntegrity()
+{
+	// For simplicity, this function just checks that all heaps and blocks are consistent.
+	HeapMetadata* currentHeap = s_tinyHeap;
+	while (currentHeap)
+	{
+		size_t calculated_free_size = currentHeap->totalSize;
+		size_t block_count = 0;
+		BlockMetadata* block = (BlockMetadata*)Shift<HeapMetadata>(currentHeap);
+		while (block)
+		{
+			if (block->isUsed)
+			{
+				calculated_free_size -= block->size;
+				block_count += 1;
+			}
+			block = block->next;
+		}
+		if (calculated_free_size != currentHeap->freeSize || block_count != currentHeap->block_count)
+		{
+			return false;
+		}
+		currentHeap = currentHeap->next;
+	}
+	return true;
+}
+
+void CheckForMemoryLeaks()
+{
+	if (s_tinyHeap != nullptr || s_smallHeap != nullptr)
+	{
+		std::cerr << "Memory leak detected!\n";
+		PrintHeapState();
+		_ASSERT(false && "Memory leak detected");
+	}
 }

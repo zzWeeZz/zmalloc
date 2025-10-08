@@ -401,3 +401,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/ProjectDefinitions/SharpmakeEntrypoint/Properties/launchSettings.json
+/ProjectDefinitions/SharpmakeEntrypoint/sharpmakeautocleanupdb_debugsolution.json
+/ProjectDefinitions/SharpmakeEntrypoint/sharpmake_debug.vs2022.csproj
